@@ -6,7 +6,6 @@ pub const DAY: Day = Day {
     name: "Calorie Counting",
     part_1: run_part1,
     part_2: Some(run_part2),
-    // other: &[("Parse", run_parse), ("No Alloc", run_no_alloc)],
     other: &[("Parse", run_parse)],
 };
 
