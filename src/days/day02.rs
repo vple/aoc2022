@@ -15,7 +15,7 @@ fn run_part1(input: &str, b: Bench) -> BenchResult {
 }
 
 fn run_part2(input: &str, b: Bench) -> BenchResult {
-    let data = parse(input).map_err(UserError)?;
+    let data = parse2(input).map_err(UserError)?;
     b.bench(|| Ok::<_, NoError>(solve_part2(&data)))
 }
 
@@ -44,6 +44,29 @@ impl Shape {
             "B" | "Y" => Ok(Shape::Paper),
             "C" | "Z" => Ok(Shape::Scissors),
             _ => Err(eyre!("Could not parse shape: {}", value)),
+        }
+    }
+
+    /**
+     * Returns the `Shape` that gets [result] when played against this shape.
+     */
+    fn reverse_result(&self, result: &RoundResult) -> Shape {
+        match self {
+            Shape::Rock => match result {
+                RoundResult::Win => Shape::Paper,
+                RoundResult::Draw => Shape::Rock,
+                RoundResult::Loss => Shape::Scissors,
+            },
+            Shape::Paper => match result {
+                RoundResult::Win => Shape::Scissors,
+                RoundResult::Draw => Shape::Paper,
+                RoundResult::Loss => Shape::Rock,
+            },
+            Shape::Scissors => match result {
+                RoundResult::Win => Shape::Rock,
+                RoundResult::Draw => Shape::Scissors,
+                RoundResult::Loss => Shape::Paper,
+            },
         }
     }
 
@@ -79,6 +102,24 @@ impl Shape {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+enum RoundResult {
+    Win,
+    Draw,
+    Loss,
+}
+
+impl RoundResult {
+    fn parse(value: &str) -> Result<RoundResult> {
+        match value {
+            "X" => Ok(RoundResult::Loss),
+            "Y" => Ok(RoundResult::Draw),
+            "Z" => Ok(RoundResult::Win),
+            _ => Err(eyre!("Could not parse result: {}", value)),
+        }
+    }
+}
+
 struct Round {
     player1: Shape,
     player2: Shape,
@@ -90,6 +131,13 @@ impl Round {
             player1: vec[0],
             player2: vec[1],
         })
+    }
+
+    fn with_second_result(result: RoundResult, p1_shape: Shape) -> Round {
+        Round {
+            player1: p1_shape,
+            player2: p1_shape.reverse_result(&result),
+        }
     }
 
     fn score(&self) -> u32 {
@@ -109,10 +157,22 @@ fn parse(input: &str) -> Result<Vec<Round>> {
         .collect()
 }
 
+fn parse2(input: &str) -> Result<Vec<Round>> {
+    input
+        .lines()
+        .map(|l| {
+            let Some((a, b)) = l.trim().split_once(" ") else { return Err(eyre!("Could not parse line: {}", l))};
+            let p1 = Shape::parse(a)?;
+            let result = RoundResult::parse(b)?;
+            Ok(Round::with_second_result(result, p1))
+        })
+        .collect()
+}
+
 fn solve_part1(rounds: &Vec<Round>) -> u32 {
     rounds.iter().map(|r| r.score()).sum()
 }
 
-fn solve_part2(elves: &Vec<Round>) -> u32 {
-    0
+fn solve_part2(rounds: &Vec<Round>) -> u32 {
+    rounds.iter().map(|r| r.score()).sum()
 }
