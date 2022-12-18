@@ -62,6 +62,12 @@ fn solve_part1(assignments: &Vec<(SectionAssignment, SectionAssignment)>) -> u32
         .count() as u32
 }
 
-fn solve_part2(rucksacks: &Vec<(SectionAssignment, SectionAssignment)>) -> u32 {
-    0
+fn solve_part2(assignments: &Vec<(SectionAssignment, SectionAssignment)>) -> u32 {
+    assignments
+        .iter()
+        .filter(|(first, second)| {
+            (first.0 <= second.0 && second.0 <= first.1)
+                || (second.0 <= first.0 && first.0 <= second.1)
+        })
+        .count() as u32
 }
